@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Roi & Reine du Bal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 30px;
+        }
+
+        .vote-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .vote-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #1a73e8;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .candidates-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .candidate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .candidate-item:hover {
+            background: #f1f3f4;
+        }
+
+        .selected {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+
+        .mdl-badge {
+            background: #34a853;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        #submitVote {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 15px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        #submitVote:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #submitVote:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .vote-status {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Élisez votre Roi et Reine du Bal 👑</h1>
+        
+        <div class="vote-columns">
+            <div class="vote-section">
+                <h2>Roi du Bal 👑</h2>
+                <input type="text" class="search-box" placeholder="Rechercher un roi..." id="kingSearch">
+                <div class="candidates-list" id="kingList"></div>
+            </div>
+            
+            <div class="vote-section">
+                <h2>Reine du Bal 👑</h2>
+                <input type="text" class="search-box" placeholder="Rechercher une reine..." id="queenSearch">
+                <div class="candidates-list" id="queenList"></div>
+            </div>
+        </div>
+
+        <button id="submitVote" disabled>Valider mon vote</button>
+        <div class="vote-status" id="voteStatus"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Configuration Firebase
+        const firebaseConfig = {
+            databaseURL: "https://bal-du-lycee-honore-romane-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const studentsRef = db.ref('students');
+        const votesRef = db.ref('votes');
+
+        // Variables d'état
+        let selectedKing = null;
+        let selectedQueen = null;
+        let deviceId = localStorage.getItem('deviceId');
+        let hasVoted = false;
+
+        // Générer un ID d'appareil unique
+        if (!deviceId) {
+            deviceId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            localStorage.setItem('deviceId', deviceId);
+        }
+
+        // Vérifier si déjà voté
+        votesRef.child(deviceId).once('value').then(snapshot => {
+            if (snapshot.exists()) {
+                disableVoting("Vous avez déjà voté !");
+            }
+        });
+
+        // Écouteurs de recherche
+        document.getElementById('kingSearch').addEventListener('input', () => filterCandidates('king'));
+        document.getElementById('queenSearch').addEventListener('input', () => filterCandidates('queen'));
+
+        // Écouteur de soumission
+        document.getElementById('submitVote').addEventListener('click', submitVote);
+
+        // Chargement des candidats
+        studentsRef.on('value', snapshot => {
+            const students = snapshot.val() || {};
+            renderCandidates(students);
+        });
+
+        function renderCandidates(students) {
+            const candidates = Object.entries(students)
+                .filter(([_, s]) => s.ID && s.status !== 'exited')
+                .map(([key, s]) => ({ key, ...s }));
+
+            const kings = candidates.filter(s => s.sexe === 'M');
+            const queens = candidates.filter(s => s.sexe === 'F');
+
+            updateCandidateList('king', kings);
+            updateCandidateList('queen', queens);
+        }
+
+        function updateCandidateList(type, candidates) {
+            const listElement = document.getElementById(`${type}List`);
+            listElement.innerHTML = '';
+
+            candidates.forEach(candidate => {
+                const div = document.createElement('div');
+                div.className = `candidate-item ${selectedKing === candidate.key || selectedQueen === candidate.key ? 'selected' : ''}`;
+                div.innerHTML = `
+                    <div>
+                        ${candidate.nom} 
+                        ${candidate.mdl ? '<span class="mdl-badge">MDL</span>' : ''}
+                        <span style="color:#666; font-size:0.9em">#${candidate.ID.toString().padStart(3, '0')}</span>
+                    </div>
+                    <div>${candidate.votes || 0} votes</div>
+                `;
+                
+                div.onclick = () => selectCandidate(type, candidate.key);
+                listElement.appendChild(div);
+            });
+        }
+
+        function selectCandidate(type, key) {
+            if (hasVoted) return;
+
+            if (type === 'king') {
+                selectedKing = selectedKing === key ? null : key;
+            } else {
+                selectedQueen = selectedQueen === key ? null : key;
+            }
+
+            document.getElementById('submitVote').disabled = !(selectedKing && selectedQueen);
+            renderCandidates(studentsRef);
+        }
+
+        async function submitVote() {
+            if (!selectedKing || !selectedQueen || hasVoted) return;
+
+            try {
+                // Enregistrer les votes
+                const updates = {};
+                updates[`students/${selectedKing}/votes`] = firebase.database.ServerValue.increment(1);
+                updates[`students/${selectedQueen}/votes`] = firebase.database.ServerValue.increment(1);
+                updates[`votes/${deviceId}`] = { timestamp: firebase.database.ServerValue.TIMESTAMP };
+
+                await db.ref().update(updates);
+                
+                disableVoting("Merci pour votre vote ! ✔️");
+                document.getElementById('voteStatus').style.color = "#34a853";
+            } catch (error) {
+                document.getElementById('voteStatus').textContent = "Erreur lors du vote, veuillez réessayer.";
+                document.getElementById('voteStatus').style.color = "#d93025";
+            }
+        }
+
+        function disableVoting(message) {
+            hasVoted = true;
+            document.getElementById('submitVote').disabled = true;
+            document.getElementById('voteStatus').textContent = message;
+            document.querySelectorAll('.candidate-item').forEach(item => {
+                item.style.pointerEvents = 'none';
+            });
+        }
+
+        function filterCandidates(type) {
+            const searchTerm = document.getElementById(`${type}Search`).value.toLowerCase();
+            const items = document.getElementById(`${type}List`).getElementsByClassName('candidate-item');
+            
+            Array.from(items).forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
