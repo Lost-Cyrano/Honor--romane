@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enregistrement Bal du Lycée</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #1a73e8;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .columns-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .student-list {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .student-item:hover {
+            transform: translateX(5px);
+        }
+
+        .mdl-true { background: #e8f0fe; border-left: 4px solid #1a73e8; }
+        .mdl-false { background: #fce8e6; border-left: 4px solid #d93025; }
+        .registered { background: #e6f4ea; border-left: 4px solid #34a853; }
+        .exited { opacity: 0.6; background: #f5f5f5; }
+
+        .student-id {
+            font-weight: bold;
+            color: #5f6368;
+            margin-left: 10px;
+        }
+
+        .status-indicator {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enregistrement des Élèves</h1>
+        <input type="text" class="search-box" placeholder="Rechercher par nom ou ID..." id="searchInput">
+        
+        <div class="columns-container">
+            <div class="student-list">
+                <h3>Élèves non enregistrés</h3>
+                <div id="unregisteredList"></div>
+            </div>
+            
+            <div class="student-list">
+                <h3>Élèves enregistrés</h3>
+                <div id="registeredList"></div>
+                <h3 style="margin-top: 20px;">Sorties</h3>
+                <div id="exitedList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Configuration Firebase
+        const firebaseConfig = {
+            databaseURL: "https://bal-du-lycee-honore-romane-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const studentsRef = db.ref('students');
+
+        // Éléments UI
+        const searchInput = document.getElementById('searchInput');
+        const unregisteredList = document.getElementById('unregisteredList');
+        const registeredList = document.getElementById('registeredList');
+        const exitedList = document.getElementById('exitedList');
+
+        // Recherche en temps réel
+        searchInput.addEventListener('input', filterStudents);
+
+        // Écouteur pour les données Firebase
+        studentsRef.on('value', (snapshot) => {
+            const students = snapshot.val() || {};
+            renderStudents(students);
+        });
+
+        function renderStudents(students) {
+            unregisteredList.innerHTML = '';
+            registeredList.innerHTML = '';
+            exitedList.innerHTML = '';
+
+            Object.entries(students).forEach(([key, student]) => {
+                const element = createStudentElement(student, key);
+                
+                if (student.status === 'exited') {
+                    exitedList.appendChild(element);
+                } else if (student.ID) {
+                    registeredList.appendChild(element);
+                } else {
+                    unregisteredList.appendChild(element);
+                }
+            });
+        }
+
+        function createStudentElement(student, key) {
+            const div = document.createElement('div');
+            div.className = `student-item ${student.mdl ? 'mdl-true' : 'mdl-false'} ${student.status || ''}`;
+            div.innerHTML = `
+                <div>
+                    ${student.nom}
+                    ${student.ID ? `<span class="student-id">#${student.ID.toString().padStart(3, '0')}</span>` : ''}
+                </div>
+                ${student.status === 'exited' ? '<div class="status-indicator" style="background:#5f6368">Sorti</div>' : 
+                 student.ID ? '<div class="status-indicator" style="background:#34a853">Entré</div>' : ''}
+            `;
+
+            div.onclick = () => handleStudentClick(student, key);
+            return div;
+        }
+
+        async function handleStudentClick(student, key) {
+            if (!student.ID) {
+                if (confirm(`Enregistrer ${student.nom} ?`)) {
+                    const newId = await getNextStudentId();
+                    studentsRef.child(key).update({
+                        ID: newId,
+                        status: 'entered',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            } else if (student.status !== 'exited') {
+                if (confirm(`Marquer ${student.nom} comme sorti ?`)) {
+                    studentsRef.child(key).update({
+                        status: 'exited',
+                        exitTime: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            }
+        }
+
+        async function getNextStudentId() {
+            const snapshot = await studentsRef.once('value');
+            const students = snapshot.val() || {};
+            const maxId = Object.values(students).reduce((max, s) => Math.max(max, s.ID || 0), 0);
+            return maxId + 1;
+        }
+
+        function filterStudents() {
+            const query = searchInput.value.toLowerCase();
+            Array.from(document.getElementsByClassName('student-item')).forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
