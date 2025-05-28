@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importation Massive - Bal du Lycée</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 30px;
+        }
+        
+        .upload-section {
+            border: 2px dashed #1a73e8;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background: #0d5bba;
+        }
+        
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: #1a73e8;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background: #f1f1f1;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: #1a73e8;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            line-height: 20px;
+        }
+        
+        .status-info {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+        
+        #confirmImport {
+            background: #34a853;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+            margin: 0 auto;
+            transition: all 0.3s;
+        }
+        
+        #confirmImport:hover {
+            background: #2d9248;
+        }
+        
+        .student-card {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .mdl-true { border-left: 4px solid #1a73e8; }
+        .mdl-false { border-left: 4px solid #d93025; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Importation Massive d'Élèves</h1>
+        
+        <div class="upload-section">
+            <p>Sélectionnez un fichier Excel (.xlsx, .xls, .csv) exporté depuis Google Docs</p>
+            <input type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choisir un fichier</button>
+            <p class="file-name" id="fileName">Aucun fichier sélectionné</p>
+        </div>
+        
+        <div class="preview-section" id="previewSection">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('firebase')">Prévisualisation Firebase</div>
+                <div class="tab" onclick="switchTab('register')">Simulation Register</div>
+            </div>
+            
+            <div class="tab-content active" id="firebaseTab">
+                <h3>Structure des données dans Firebase</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom Complet</th>
+                            <th>Sexe</th>
+                            <th>MDL</th>
+                            <th>Classe</th>
+                        </tr>
+                    </thead>
+                    <tbody id="firebasePreview">
+                        <!-- Rempli dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="registerTab">
+                <h3>Simulation de l'affichage dans register.html</h3>
+                <div id="registerPreview">
+                    <!-- Rempli dynamiquement -->
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+            
+            <div class="status-info" id="statusInfo"></div>
+            
+            <button id="confirmImport" onclick="confirmImport()">Confirmer l'importation</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Configuration Firebase
+        const firebaseConfig = {
+            databaseURL: "https://bal-du-lycee-honore-romane-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const studentsRef = db.ref('students');
+
+        let studentsData = [];
+        let fileUploaded = false;
+
+        // Gestion de la sélection de fichier
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('fileName').textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                processExcelData(e.target.result);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function processExcelData(data) {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            
+            // Trouver les index des colonnes
+            const headers = jsonData[0].map(h => h ? h.toString().toLowerCase().trim() : '');
+            const nomIndex = headers.findIndex(h => h.includes('nom'));
+            const prenomIndex = headers.findIndex(h => h.includes('prénom'));
+            const classeIndex = headers.findIndex(h => h.includes('classe'));
+            const sexeIndex = headers.findIndex(h => h.includes('sexe'));
+            const mdlIndex = headers.findIndex(h => h.includes('membres ayant cotise') || h.includes('cotise'));
+            
+            studentsData = [];
+            
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row[nomIndex] && !row[prenomIndex]) continue;
+                
+                const nom = (row[nomIndex] || '').toString().trim();
+                const prenom = (row[prenomIndex] || '').toString().trim();
+                const classe = (row[classeIndex] || '').toString().trim();
+                const sexe = (row[sexeIndex] || '').toString().trim().charAt(0).toUpperCase() === 'F' ? 'F' : 'M';
+                const mdl = row[mdlIndex] ? row[mdlIndex].toString().trim().toLowerCase().includes('mdl') : false;
+                
+                if (nom && prenom) {
+                    studentsData.push({
+                        nom: `${nom} ${prenom}`,
+                        sexe: sexe,
+                        mdl: mdl,
+                        classe: classe,
+                        votes: 0,
+                        status: null
+                    });
+                }
+            }
+            
+            updatePreviews();
+            document.getElementById('previewSection').style.display = 'block';
+            document.getElementById('confirmImport').style.display = 'block';
+            fileUploaded = true;
+        }
+
+        function updatePreviews() {
+            // Prévisualisation Firebase
+            const firebasePreview = document.getElementById('firebasePreview');
+            firebasePreview.innerHTML = '';
+            
+            studentsData.slice(0, 20).forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.nom}</td>
+                    <td>${student.sexe === 'F' ? 'Féminin' : 'Masculin'}</td>
+                    <td>${student.mdl ? 'Oui' : 'Non'}</td>
+                    <td>${student.classe || '-'}</td>
+                `;
+                firebasePreview.appendChild(row);
+            });
+            
+            if (studentsData.length > 20) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="4" style="text-align: center;">+ ${studentsData.length - 20} autres élèves...</td>`;
+                firebasePreview.appendChild(row);
+            }
+            
+            // Simulation Register
+            const registerPreview = document.getElementById('registerPreview');
+            registerPreview.innerHTML = '<h4>Élèves non enregistrés</h4>';
+            
+            studentsData.slice(0, 10).forEach(student => {
+                const card = document.createElement('div');
+                card.className = `student-card ${student.mdl ? 'mdl-true' : 'mdl-false'}`;
+                card.innerHTML = `
+                    <div>${student.nom}</div>
+                    <div>${student.classe || 'Classe non renseignée'}</div>
+                `;
+                registerPreview.appendChild(card);
+            });
+            
+            if (studentsData.length > 10) {
+                const card = document.createElement('div');
+                card.style.textAlign = 'center';
+                card.style.padding = '10px';
+                card.textContent = `+ ${studentsData.length - 10} autres élèves...`;
+                registerPreview.appendChild(card);
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+        }
+
+        function confirmImport() {
+            if (!fileUploaded || studentsData.length === 0) return;
+            
+            if (!confirm(`Êtes-vous sûr de vouloir importer ${studentsData.length} élèves dans la base de données ?`)) {
+                return;
+            }
+            
+            document.getElementById('confirmImport').disabled = true;
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('statusInfo').textContent = `Importation en cours (0/${studentsData.length})...`;
+            
+            const batchSize = 20; // Pour éviter de surcharger Firebase
+            const totalBatches = Math.ceil(studentsData.length / batchSize);
+            let currentBatch = 0;
+            
+            const importBatch = () => {
+                const start = currentBatch * batchSize;
+                const end = Math.min(start + batchSize, studentsData.length);
+                const batch = studentsData.slice(start, end);
+                
+                const updates = {};
+                batch.forEach(student => {
+                    const newKey = studentsRef.push().key;
+                    updates[newKey] = student;
+                });
+                
+                studentsRef.update(updates).then(() => {
+                    currentBatch++;
+                    const progress = Math.round((currentBatch / totalBatches) * 100);
+                    document.getElementById('progressBar').style.width = `${progress}%`;
+                    document.getElementById('progressBar').textContent = `${progress}%`;
+                    document.getElementById('statusInfo').textContent = 
+                        `Importation en cours (${Math.min(end, studentsData.length)}/${studentsData.length})...`;
+                    
+                    if (currentBatch < totalBatches) {
+                        setTimeout(importBatch, 500); // Délai pour éviter les limites de Firebase
+                    } else {
+                        document.getElementById('statusInfo').textContent = 
+                            `Importation terminée ! ${studentsData.length} élèves ajoutés.`;
+                        document.getElementById('confirmImport').disabled = false;
+                    }
+                }).catch(error => {
+                    document.getElementById('statusInfo').textContent = 
+                        `Erreur lors de l'importation : ${error.message}`;
+                    document.getElementById('confirmImport').disabled = false;
+                });
+            };
+            
+            importBatch();
+        }
+    </script>
+</body>
+</html>
