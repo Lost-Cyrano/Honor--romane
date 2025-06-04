@@ -13,11 +13,12 @@
         body {
             margin: 0;
             padding: 20px;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-bottom: 60px
+            padding-bottom: 60px;
+            color: #333;
         }
 
         .container {
@@ -26,10 +27,38 @@
             flex: 1;
         }
 
-        h1 {
+        header {
             text-align: center;
-            color: #1a73e8;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
             margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: #1a73e8;
+            margin: 0;
+            font-size: 2.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: "👑";
+            position: absolute;
+            right: -40px;
+            top: -10px;
+            font-size: 2rem;
+        }
+
+        .vote-instructions {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            border-left: 4px solid #1a73e8;
         }
 
         .vote-columns {
@@ -48,22 +77,48 @@
         .vote-section {
             background: white;
             border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .vote-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .vote-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1a73e8;
+            border-bottom: 2px solid #e8f0fe;
+            padding-bottom: 15px;
+            margin-top: 0;
         }
 
         .search-box {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
+            padding: 14px;
+            margin-bottom: 20px;
             border: 2px solid #1a73e8;
             border-radius: 8px;
             font-size: 16px;
+            background: #f8f9fa;
+            transition: box-shadow 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.3);
         }
 
         .candidates-list {
             max-height: 50vh;
             overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8f9fa;
         }
 
         .selected-section {
@@ -74,37 +129,47 @@
             padding: 15px;
             text-align: center;
             color: #666;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
         }
 
         .selected-person {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #e8f0fe;
-            padding: 10px;
+            background: linear-gradient(to right, #e8f0fe, #d7e3fc);
+            padding: 12px;
             border-radius: 6px;
             margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: 500;
         }
 
         .candidate-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            margin: 8px 0;
+            padding: 14px;
+            margin: 10px 0;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
             border: 2px solid transparent;
+            background: white;
         }
 
         .candidate-item:hover:not(.disabled) {
             background: #f1f3f4;
+            transform: translateX(5px);
         }
 
         .selected-candidate {
             border-color: #1a73e8;
             background: #e8f0fe;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
         }
 
         .disabled {
@@ -113,11 +178,12 @@
         }
 
         .mdl-badge {
-            background: #34a853;
+            background: linear-gradient(to right, #34a853, #2e8b57);
             color: white;
-            padding: 2px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.8em;
+            font-size: 0.85em;
+            font-weight: bold;
         }
 
         .validate-buttons {
@@ -128,61 +194,121 @@
         }
 
         .validate-button {
-            padding: 15px 30px;
-            background: #1a73e8;
+            padding: 16px 35px;
+            background: linear-gradient(to right, #1a73e8, #0d5cb6);
             color: white;
             border: none;
-            border-radius: 25px;
-            font-size: 16px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
         }
 
         .validate-button:disabled {
             background: #cccccc;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         .validate-button:hover:not(:disabled) {
             transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(26, 115, 232, 0.4);
         }
 
         .vote-status {
             text-align: center;
             margin-top: 20px;
-            color: #666;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .vote-progress {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .progress-step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f0fe;
+            font-weight: bold;
+            border: 2px solid #1a73e8;
+        }
+
+        .progress-step.active {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: #34a853;
+            color: white;
+            border-color: #34a853;
         }
 
         footer {
             text-align: center;
-            padding: 10px;
-            color: #666;
-            background: white;
+            padding: 15px;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            z-index:100;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            font-size: 1.1rem;
+        }
+
+        .success {
+            color: #34a853;
+        }
+
+        .error {
+            color: #d93025;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Élisez votre Roi et Reine du Bal 👑</h1>
+        <header>
+            <h1>Élisez votre Roi et Reine du Bal</h1>
+            <div class="vote-instructions">
+                <p>Vous pouvez voter pour <strong>n'importe quel élève</strong> comme Roi ou Reine du bal.</p>
+                <p>Votez d'abord pour votre Roi, puis pour votre Reine. Vous ne pourrez voter qu'une seule fois.</p>
+            </div>
+            
+            <div class="vote-progress">
+                <div class="progress-step" id="step1">1</div>
+                <div class="progress-step" id="step2">2</div>
+            </div>
+        </header>
         
         <div class="vote-columns">
             <div class="vote-section">
-                <h2>Roi du Bal 👑</h2>
-                <div class="selected-section" id="selectedKing">Aucune sélection</div>
-                <input type="text" class="search-box" placeholder="Rechercher un roi..." id="kingSearch">
+                <h2><span>Roi du Bal</span> 👑</h2>
+                <div class="selected-section" id="selectedKing">Sélectionnez un candidat pour le Roi</div>
+                <input type="text" class="search-box" placeholder="Rechercher un candidat..." id="kingSearch">
                 <div class="candidates-list" id="kingList"></div>
                 <button class="validate-button" id="validateKing" disabled>Valider le Roi</button>
             </div>
             
             <div class="vote-section">
-                <h2>Reine du Bal 👑</h2>
-                <div class="selected-section" id="selectedQueen">Aucune sélection</div>
-                <input type="text" class="search-box" placeholder="Rechercher une reine..." id="queenSearch">
+                <h2><span>Reine du Bal</span> 👑</h2>
+                <div class="selected-section" id="selectedQueen">Sélectionnez un candidat pour la Reine</div>
+                <input type="text" class="search-box" placeholder="Rechercher un candidat..." id="queenSearch">
                 <div class="candidates-list" id="queenList"></div>
                 <button class="validate-button" id="validateQueen" disabled>Valider la Reine</button>
             </div>
@@ -192,7 +318,7 @@
     </div>
 
     <footer>
-        Créé par <b></b>MAIRE Anael</b> pour la MDL <br>- Tous droits réservés -
+        Créé par <b>MAIRE Anael</b> pour la MDL - Tous droits réservés
     </footer>
 
     <!-- Firebase SDK -->
@@ -200,15 +326,19 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
+        // Configuration Firebase existante
         const firebaseConfig = {
             databaseURL: "https://bal-du-lycee-honore-romane-default-rtdb.europe-west1.firebasedatabase.app/"
         };
+        
+        // Initialisation Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const studentsRef = db.ref('students');
         const votesRoiRef = db.ref('votesRoi');
         const votesReineRef = db.ref('votesReine');
 
+        // Variables globales
         let selectedKing = null;
         let selectedQueen = null;
         let deviceId = localStorage.getItem('deviceId');
@@ -221,35 +351,62 @@
             localStorage.setItem('deviceId', deviceId);
         }
 
-        // Vérifier les votes existants
-        Promise.all([
-            votesRoiRef.child(deviceId).once('value'),
-            votesReineRef.child(deviceId).once('value')
-        ]).then(([roiSnap, reineSnap]) => {
-            hasVotedRoi = roiSnap.exists();
-            hasVotedReine = reineSnap.exists();
-            updateUIState();
+        // Initialisation de l'interface
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
         });
 
-        // Écouteurs
-        document.getElementById('kingSearch').addEventListener('input', () => filterCandidates('king'));
-        document.getElementById('queenSearch').addEventListener('input', () => filterCandidates('queen'));
-        document.getElementById('validateKing').addEventListener('click', () => submitVote('king'));
-        document.getElementById('validateQueen').addEventListener('click', () => submitVote('queen'));
+        function initApp() {
+            // Vérifier les votes existants
+            checkExistingVotes();
+            
+            // Écouteurs d'événements
+            setupEventListeners();
+            
+            // Charger les étudiants depuis Firebase
+            studentsRef.on('value', snapshot => {
+                const students = snapshot.val() || {};
+                renderCandidates(students);
+            });
+        }
 
-        studentsRef.on('value', snapshot => {
-            const students = snapshot.val() || {};
-            renderCandidates(students);
-        });
+        function checkExistingVotes() {
+            // Vérifier si l'utilisateur a déjà voté
+            Promise.all([
+                votesRoiRef.child(deviceId).once('value'),
+                votesReineRef.child(deviceId).once('value')
+            ]).then(([roiSnap, reineSnap]) => {
+                hasVotedRoi = roiSnap.exists();
+                hasVotedReine = reineSnap.exists();
+                
+                // Mettre à jour l'interface
+                updateUIState();
+                updateProgressBar();
+            });
+        }
+
+        function updateProgressBar() {
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            
+            if (hasVotedRoi) {
+                step1.classList.add('completed');
+                step2.classList.add('active');
+            }
+            
+            if (hasVotedReine) {
+                step2.classList.add('completed');
+            }
+        }
 
         function renderCandidates(students) {
             const candidates = Object.entries(students)
                 .filter(([_, s]) => s.ID && s.status !== 'exited')
                 .map(([key, s]) => ({ key, ...s }))
-                .sort((a, b) => a.ID - b.ID); // Tri par ID
+                .sort((a, b) => a.ID - b.ID);
 
-            updateCandidateList('king', candidates.filter(s => s.sexe === 'M'));
-            updateCandidateList('queen', candidates.filter(s => s.sexe === 'F'));
+            updateCandidateList('king', candidates);
+            updateCandidateList('queen', candidates);
         }
 
         function updateCandidateList(type, candidates) {
@@ -274,24 +431,26 @@
         }
 
         function handleSelection(type, key, nom) {
-            // Réinitialiser les sélections précédentes
             if (type === 'king') {
                 selectedKing = selectedKing === key ? null : key;
             } else {
                 selectedQueen = selectedQueen === key ? null : key;
             }
 
-            // Mettre à jour l'affichage
             const selectedElement = document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            selectedElement.innerHTML = selectedKing && type === 'king' || selectedQueen && type === 'queen' ? 
-                `<div class="selected-person">${nom}</div>` : 'Aucune sélection';
+            selectedElement.innerHTML = (type === 'king' && selectedKing) || (type === 'queen' && selectedQueen) ? 
+                `<div class="selected-person">${nom}</div>` : 
+                `Sélectionnez un candidat pour ${type === 'king' ? 'le Roi' : 'la Reine'}`;
 
-            // Activer/désactiver les boutons
             document.getElementById(`validate${type.charAt(0).toUpperCase() + type.slice(1)}`).disabled = 
                 !(type === 'king' ? selectedKing : selectedQueen) || (type === 'king' ? hasVotedRoi : hasVotedReine);
+        }
 
-            // Réactiver toutes les listes
-            document.querySelectorAll('.candidate-item').forEach(item => item.classList.remove('disabled'));
+        function setupEventListeners() {
+            document.getElementById('kingSearch').addEventListener('input', () => filterCandidates('king'));
+            document.getElementById('queenSearch').addEventListener('input', () => filterCandidates('queen'));
+            document.getElementById('validateKing').addEventListener('click', () => submitVote('king'));
+            document.getElementById('validateQueen').addEventListener('click', () => submitVote('queen'));
         }
 
         async function submitVote(type) {
@@ -302,21 +461,34 @@
                 const updates = {};
                 updates[`students/${candidateKey}/votes`] = firebase.database.ServerValue.increment(1);
                 updates[`votes${type === 'king' ? 'Roi' : 'Reine'}/${deviceId}`] = { 
-                    timestamp: firebase.database.ServerValue.TIMESTAMP 
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    candidate: candidateKey
                 };
 
                 await db.ref().update(updates);
                 
-                if (type === 'king') hasVotedRoi = true;
-                else hasVotedReine = true;
+                if (type === 'king') {
+                    hasVotedRoi = true;
+                } else {
+                    hasVotedReine = true;
+                }
                 
                 updateUIState();
+                updateProgressBar();
+                
                 document.getElementById('voteStatus').textContent = 
                     `Vote pour ${type === 'king' ? 'le Roi' : 'la Reine'} enregistré avec succès ! ✔️`;
-                document.getElementById('voteStatus').style.color = "#34a853";
+                document.getElementById('voteStatus').className = 'vote-status success';
+                
+                // Si les deux votes sont terminés
+                if (hasVotedRoi && hasVotedReine) {
+                    document.getElementById('voteStatus').innerHTML = 
+                        '<div class="success">✅ Votre vote a été enregistré avec succès ! Merci pour votre participation.</div>';
+                }
             } catch (error) {
                 document.getElementById('voteStatus').textContent = "Erreur lors du vote, veuillez réessayer.";
-                document.getElementById('voteStatus').style.color = "#d93025";
+                document.getElementById('voteStatus').className = 'vote-status error';
+                console.error("Erreur Firebase:", error);
             }
         }
 
@@ -326,11 +498,11 @@
             
             if (hasVotedRoi) {
                 document.getElementById('kingSearch').disabled = true;
-                document.getElementById('selectedKing').innerHTML = "Vote validé ✔️";
+                document.getElementById('selectedKing').innerHTML = "<div class='selected-person'>Vote validé ✔️</div>";
             }
             if (hasVotedReine) {
                 document.getElementById('queenSearch').disabled = true;
-                document.getElementById('selectedQueen').innerHTML = "Vote validé ✔️";
+                document.getElementById('selectedQueen').innerHTML = "<div class='selected-person'>Vote validé ✔️</div>";
             }
         }
 
